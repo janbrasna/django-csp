@@ -1,0 +1,39 @@
+name: Docs
+
+on:
+  workflow_dispatch: # allow manual runs
+  push:
+    branches:
+      - main
+    paths: # avoid extra builds
+      - docs/**
+      - .github/workflows/docs.yaml
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false # skip any intermediate builds but let finish
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: ammaraskar/sphinx-action@8.1.3
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_build/html/
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
